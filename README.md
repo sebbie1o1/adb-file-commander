@@ -6,6 +6,9 @@ A Midnight Commander-style dual-panel file manager with ADB support for copying 
 ![Node.js](https://img.shields.io/badge/Node.js-18%2B-green)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
+
+<img width="1338" height="725" alt="image" src="https://github.com/user-attachments/assets/86ec7e39-cef7-4838-bba0-fbe9b226d031" />
+
 ## Features
 
 - **Dual-panel interface** - Browse local and remote (Android) directories side by side
