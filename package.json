@@ -1,0 +1,31 @@
+{
+  "name": "adb-commander",
+  "version": "1.0.0",
+  "description": "A Midnight Commander-style file manager with ADB support for Android devices",
+  "main": "src/index.js",
+  "type": "module",
+  "bin": {
+    "adb-commander": "./src/index.js"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "keywords": [
+    "adb",
+    "file-manager",
+    "midnight-commander",
+    "android",
+    "terminal",
+    "tui"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "blessed": "^0.1.81"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
+
