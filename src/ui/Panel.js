@@ -224,7 +224,7 @@ export class FilePanel extends EventEmitter {
 
       let icon = file.isDirectory ? THEME.icons.directory : THEME.icons.file;
       if (file.isParent) icon = THEME.icons.parent;
-      if (file.isSymlink) icon = THEME.icons.symlink;
+      if (file.isSymlink && !file.isDirectory) icon = THEME.icons.symlink;
 
       let nameColor = file.isDirectory ? THEME.colors.directory : THEME.colors.file;
       if (file.isSymlink) nameColor = THEME.colors.symlink;
@@ -239,7 +239,7 @@ export class FilePanel extends EventEmitter {
         name = name.padEnd(maxNameLen);
       }
 
-      const size = file.isDirectory ? '<DIR>' : formatSize(file.size);
+      const size = (file.isDirectory || file.isSymlink) ? '<DIR>' : formatSize(file.size);
       const date = file.mtime ? formatDate(file.mtime) : '';
 
       let line = `${selectMark} ${icon} {${nameColor}-fg}${name}{/} ${size.padStart(8)} ${date}`;
@@ -282,7 +282,7 @@ export class FilePanel extends EventEmitter {
     const file = this.files[this.cursor];
     if (!file) return;
 
-    if (file.isDirectory) {
+    if (file.isDirectory || file.isSymlink) {
       if (file.isParent) {
         await this.goUp();
       } else {

@@ -48,50 +48,108 @@ export class AdbClient {
 
   async listDirectory(path) {
     try {
-      const output = await this.execute(['shell', 'ls', '-la', path]);
-      return this.parseLsOutput(output, path);
+      const output = await this.execute(['shell', 'ls', '-laL', path]);
+      return this.parseLsOutput(output, path, false);
     } catch (err) {
-      if (err.message.includes('No such file or directory')) {
-        return [];
+      try {
+        const output = await this.execute(['shell', 'ls', '-la', path]);
+        return this.parseLsOutput(output, path, true);
+      } catch (err2) {
+        if (err2.message.includes('No such file or directory')) {
+          return [];
+        }
+        throw err2;
       }
-      throw err;
     }
   }
 
-  parseLsOutput(output, basePath) {
+  parseLsOutput(output, basePath, keepSymlinkInfo) {
     const lines = output.split('\n').filter((line) => line.trim());
     const files = [];
 
     for (const line of lines) {
       if (line.startsWith('total ')) continue;
 
-      const match = line.match(
-        /^([d\-lrwxs]+)\s+(\d+)\s+(\S+)\s+(\S+)\s+(\d+)\s+(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2})\s+(.+)$/
+      let match = line.match(
+        /^([d\-lrwxsStT@]+)\s+\d+\s+\S+\s+\S+\s+([\d,]+)\s+(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2})\s+(.+)$/
       );
 
+      if (!match) {
+        match = line.match(
+          /^([d\-lrwxsStT@]+)\s+\d+\s+\S+\s+\S+\s+([\d,]+)\s+(\w{3}\s+\d+\s+(?:\d{2}:\d{2}|\d{4}))\s+(.+)$/
+        );
+      }
+
+      if (!match) {
+        match = line.match(
+          /^([d\-lrwxsStT@]+)\s+([\d,]+)\s+(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2})\s+(.+)$/
+        );
+      }
+
+      if (!match) {
+        match = line.match(
+          /^([d\-lrwxsStT@]+)\s+\S+\s+\S+\s+([\d,]+)\s+(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2})\s+(.+)$/
+        );
+      }
+
       if (match) {
-        const [, permissions, , , , size, dateStr, name] = match;
+        const [, permissions, sizeStr, dateStr, name] = match;
+        const size = parseInt(sizeStr.replace(/,/g, ''), 10) || 0;
 
         if (name === '.' || name === '..') continue;
 
         let actualName = name;
         let isSymlink = permissions.startsWith('l');
-        if (isSymlink && name.includes(' -> ')) {
-          actualName = name.split(' -> ')[0];
+        let symlinkTarget = null;
+
+        if (name.includes(' -> ')) {
+          const parts = name.split(' -> ');
+          actualName = parts[0];
+          symlinkTarget = parts[1];
         }
+
+        const isDirectory = permissions.startsWith('d');
 
         files.push({
           name: actualName,
-          isDirectory: permissions.startsWith('d'),
+          isDirectory: isDirectory || isSymlink,
           isSymlink,
-          size: parseInt(size, 10),
-          mtime: new Date(dateStr),
+          symlinkTarget,
+          size,
+          mtime: this.parseDate(dateStr),
           permissions,
         });
       }
     }
 
     return files;
+  }
+
+  parseDate(dateStr) {
+    if (!dateStr) return null;
+    
+    if (dateStr.match(/^\d{4}-\d{2}-\d{2}/)) {
+      return new Date(dateStr);
+    }
+
+    const months = { Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5, Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11 };
+    const match = dateStr.match(/(\w{3})\s+(\d+)\s+(?:(\d{2}:\d{2})|(\d{4}))/);
+    
+    if (match) {
+      const [, month, day, time, year] = match;
+      const now = new Date();
+      const y = year ? parseInt(year, 10) : now.getFullYear();
+      const m = months[month] ?? 0;
+      const d = parseInt(day, 10);
+      
+      if (time) {
+        const [h, min] = time.split(':').map(Number);
+        return new Date(y, m, d, h, min);
+      }
+      return new Date(y, m, d);
+    }
+    
+    return null;
   }
 
   async push(localPath, remotePath, onProgress) {
