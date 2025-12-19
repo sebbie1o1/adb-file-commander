@@ -28,14 +28,14 @@ export const THEME = {
   },
 
   icons: {
-    directory: '📁',
-    file: '📄',
-    symlink: '🔗',
-    parent: '📂',
-    selected: '◆',
+    directory: '[D]',
+    file: '   ',
+    symlink: '[>]',
+    parent: '[.]',
+    selected: '*',
     unselected: ' ',
-    adb: '📱',
-    local: '💻',
+    adb: 'ADB',
+    local: 'LOC',
   },
 
   border: {

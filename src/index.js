@@ -14,7 +14,7 @@ class AdbCommander {
   constructor() {
     this.screen = blessed.screen({
       smartCSR: true,
-      title: 'ADB Commander',
+      title: 'ADB File Commander',
       cursor: { artificial: true, shape: 'line', blink: true, color: null },
     });
 

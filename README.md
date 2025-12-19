@@ -1,4 +1,4 @@
-# ADB Commander
+# ADB File Commander
 
 A Midnight Commander-style dual-panel file manager with ADB support for copying files to/from Android devices.
 
@@ -8,11 +8,11 @@ A Midnight Commander-style dual-panel file manager with ADB support for copying 
 
 ## Features
 
-- 🗂️ **Dual-panel interface** - Browse local and remote (Android) directories side by side
-- 📱 **ADB Integration** - Copy files directly to/from your Android device
-- ⌨️ **Keyboard-driven** - Fast navigation with intuitive shortcuts
-- 🎨 **Beautiful TUI** - Modern terminal interface with colors and box drawing
-- 📦 **Multi-select** - Select multiple files and directories for batch operations
+- **Dual-panel interface** - Browse local and remote (Android) directories side by side
+- **ADB Integration** - Copy files directly to/from your Android device
+- **Keyboard-driven** - Fast navigation with intuitive shortcuts
+- **Beautiful TUI** - Modern terminal interface with colors and box drawing
+- **Multi-select** - Select multiple files and directories for batch operations
 
 ## Requirements
 
@@ -24,8 +24,8 @@ A Midnight Commander-style dual-panel file manager with ADB support for copying 
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/adb-commander.git
-cd adb-commander
+git clone https://github.com/yourusername/adb-file-commander.git
+cd adb-file-commander
 
 # Install dependencies
 npm install

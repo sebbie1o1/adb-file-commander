@@ -41,7 +41,7 @@ export class FilePanel extends EventEmitter {
         border: { fg: THEME.colors.panelBorder },
         bg: THEME.colors.panelBg,
       },
-      label: ` ${this.mode === 'adb' ? '📱' : '💻'} ${label} `,
+      label: ` ${this.mode === 'adb' ? 'ADB' : 'LOCAL'} `,
       scrollable: true,
       tags: true,
     });
@@ -197,7 +197,7 @@ export class FilePanel extends EventEmitter {
 
   render() {
     const height = this.listBox.height || 20;
-    const modeIcon = this.mode === 'adb' ? '📱' : '💻';
+    const modeIcon = this.mode === 'adb' ? THEME.icons.adb : THEME.icons.local;
     const modeColor = this.mode === 'adb' ? THEME.colors.adb : THEME.colors.local;
 
     let pathDisplay = this.currentPath;
@@ -222,14 +222,14 @@ export class FilePanel extends EventEmitter {
       const isSelected = this.selected.has(file.fullPath);
       const isCursor = realIdx === this.cursor;
 
-      let icon = file.isDirectory ? '📁' : '📄';
-      if (file.isParent) icon = '📂';
-      if (file.isSymlink) icon = '🔗';
+      let icon = file.isDirectory ? THEME.icons.directory : THEME.icons.file;
+      if (file.isParent) icon = THEME.icons.parent;
+      if (file.isSymlink) icon = THEME.icons.symlink;
 
       let nameColor = file.isDirectory ? THEME.colors.directory : THEME.colors.file;
       if (file.isSymlink) nameColor = THEME.colors.symlink;
 
-      const selectMark = isSelected ? `{${THEME.colors.selected}-fg}◆{/}` : ' ';
+      const selectMark = isSelected ? `{${THEME.colors.selected}-fg}${THEME.icons.selected}{/}` : THEME.icons.unselected;
 
       let name = file.name;
       const maxNameLen = 26;

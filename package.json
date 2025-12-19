@@ -1,11 +1,11 @@
 {
-  "name": "adb-commander",
+  "name": "adb-file-commander",
   "version": "1.0.0",
   "description": "A Midnight Commander-style file manager with ADB support for Android devices",
   "main": "src/index.js",
   "type": "module",
   "bin": {
-    "adb-commander": "./src/index.js"
+    "adb-file-commander": "./src/index.js"
   },
   "scripts": {
     "start": "node src/index.js",
