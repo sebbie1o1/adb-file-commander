@@ -128,6 +128,7 @@ export class FilePanel extends EventEmitter {
     if (this.currentPath !== '/') {
       this.files.push({
         name: '..',
+        fullPath: dirname(this.currentPath),
         isDirectory: true,
         isParent: true,
         size: 0,
@@ -141,12 +142,14 @@ export class FilePanel extends EventEmitter {
       try {
         const fullPath = join(this.currentPath, entry.name);
         const stats = await stat(fullPath).catch(() => null);
+        const isSymlink = entry.isSymbolicLink();
+        const isDir = stats ? stats.isDirectory() : entry.isDirectory();
 
         this.files.push({
           name: entry.name,
           fullPath,
-          isDirectory: entry.isDirectory(),
-          isSymlink: entry.isSymbolicLink(),
+          isDirectory: isDir,
+          isSymlink,
           size: stats?.size || 0,
           mtime: stats?.mtime || null,
         });
@@ -239,7 +242,7 @@ export class FilePanel extends EventEmitter {
         name = name.padEnd(maxNameLen);
       }
 
-      const size = (file.isDirectory || file.isSymlink) ? '<DIR>' : formatSize(file.size);
+      const size = file.isDirectory ? '<DIR>' : formatSize(file.size);
       const date = file.mtime ? formatDate(file.mtime) : '';
 
       let line = `${selectMark} ${icon} {${nameColor}-fg}${name}{/} ${size.padStart(8)} ${date}`;
@@ -282,15 +285,22 @@ export class FilePanel extends EventEmitter {
     const file = this.files[this.cursor];
     if (!file) return;
 
-    if (file.isDirectory || file.isSymlink) {
+    if (file.isDirectory) {
       if (file.isParent) {
         await this.goUp();
       } else {
+        const prevPath = this.currentPath;
         this.currentPath = file.fullPath;
         this.cursor = 0;
         this.scroll = 0;
         this.selected.clear();
-        await this.refresh();
+        try {
+          await this.refresh();
+        } catch (err) {
+          this.currentPath = prevPath;
+          await this.refresh();
+          this.emit('statusUpdate', `Cannot enter: ${err.message}`);
+        }
       }
     }
   }
