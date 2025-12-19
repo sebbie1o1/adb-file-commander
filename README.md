@@ -24,7 +24,7 @@ A Midnight Commander-style dual-panel file manager with ADB support for copying 
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/adb-file-commander.git
+git clone https://github.com/sebbie1o1/adb-file-commander.git
 cd adb-file-commander
 
 # Install dependencies
