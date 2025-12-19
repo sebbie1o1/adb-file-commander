@@ -4,13 +4,14 @@ import { THEME } from './theme.js';
 export class ConfirmDialog {
   constructor(options) {
     this.parent = options.parent;
+    this.keyHandlers = [];
 
     this.box = blessed.box({
       parent: this.parent,
       top: 'center',
       left: 'center',
       width: 50,
-      height: 7,
+      height: 8,
       border: { type: 'line' },
       style: {
         bg: THEME.colors.dialogBg,
@@ -26,6 +27,7 @@ export class ConfirmDialog {
       top: 1,
       left: 2,
       right: 2,
+      height: 2,
       content: '',
       style: {
         fg: THEME.colors.fg,
@@ -34,119 +36,100 @@ export class ConfirmDialog {
       tags: true,
     });
 
-    this.buttons = blessed.box({
+    this.buttonsBox = blessed.text({
       parent: this.box,
       bottom: 1,
       left: 'center',
-      width: 20,
+      width: 30,
       height: 1,
+      content: '',
       style: {
         bg: THEME.colors.dialogBg,
       },
       tags: true,
     });
 
-    this.yesBtn = blessed.button({
-      parent: this.buttons,
-      left: 0,
-      width: 8,
+    this.hint = blessed.text({
+      parent: this.box,
+      bottom: 0,
+      left: 2,
+      right: 2,
       height: 1,
-      content: '  Yes  ',
+      content: '{gray-fg}← → to select, Enter to confirm, Esc to cancel{/}',
       style: {
-        fg: THEME.colors.fg,
-        bg: THEME.colors.success,
-        focus: {
-          bg: THEME.colors.selected,
-        },
+        bg: THEME.colors.dialogBg,
       },
-      mouse: true,
-    });
-
-    this.noBtn = blessed.button({
-      parent: this.buttons,
-      right: 0,
-      width: 8,
-      height: 1,
-      content: '  No   ',
-      style: {
-        fg: THEME.colors.fg,
-        bg: THEME.colors.error,
-        focus: {
-          bg: THEME.colors.warning,
-        },
-      },
-      mouse: true,
+      tags: true,
     });
 
     this.resolve = null;
-    this.focused = 0;
+    this.selected = 0;
   }
 
   show(messageText) {
     return new Promise((resolve) => {
       this.resolve = resolve;
       this.message.setContent(messageText);
-      this.focused = 1;
-      this.updateFocus();
+      this.selected = 0;
+      this.updateButtons();
       this.box.show();
       this.parent.render();
 
-      const cleanup = () => {
-        this.parent.unkey(['y', 'n', 'enter', 'escape', 'left', 'right', 'tab']);
+      this.cleanup();
+
+      const onKey = (key) => {
+        if (key === 'y') {
+          this.finish(resolve, true);
+        } else if (key === 'n' || key === 'escape') {
+          this.finish(resolve, false);
+        } else if (key === 'enter') {
+          this.finish(resolve, this.selected === 0);
+        } else if (key === 'left' || key === 'right' || key === 'tab') {
+          this.selected = this.selected === 0 ? 1 : 0;
+          this.updateButtons();
+          this.parent.render();
+        }
       };
 
-      this.parent.key('y', () => {
-        cleanup();
-        this.hide();
-        resolve(true);
-      });
+      this.keyHandlers = [
+        { keys: 'y', handler: () => onKey('y') },
+        { keys: 'n', handler: () => onKey('n') },
+        { keys: 'escape', handler: () => onKey('escape') },
+        { keys: 'enter', handler: () => onKey('enter') },
+        { keys: 'left', handler: () => onKey('left') },
+        { keys: 'right', handler: () => onKey('right') },
+        { keys: 'tab', handler: () => onKey('tab') },
+      ];
 
-      this.parent.key('n', () => {
-        cleanup();
-        this.hide();
-        resolve(false);
-      });
-
-      this.parent.key('escape', () => {
-        cleanup();
-        this.hide();
-        resolve(false);
-      });
-
-      this.parent.key('enter', () => {
-        cleanup();
-        this.hide();
-        resolve(this.focused === 0);
-      });
-
-      this.parent.key(['left', 'right', 'tab'], () => {
-        this.focused = this.focused === 0 ? 1 : 0;
-        this.updateFocus();
-        this.parent.render();
-      });
-
-      this.yesBtn.on('press', () => {
-        cleanup();
-        this.hide();
-        resolve(true);
-      });
-
-      this.noBtn.on('press', () => {
-        cleanup();
-        this.hide();
-        resolve(false);
+      this.keyHandlers.forEach(({ keys, handler }) => {
+        this.parent.key(keys, handler);
       });
     });
   }
 
-  updateFocus() {
-    if (this.focused === 0) {
-      this.yesBtn.style.bg = THEME.colors.selected;
-      this.noBtn.style.bg = THEME.colors.error;
-    } else {
-      this.yesBtn.style.bg = THEME.colors.success;
-      this.noBtn.style.bg = THEME.colors.warning;
-    }
+  updateButtons() {
+    const yesStyle = this.selected === 0
+      ? `{${THEME.colors.success}-bg}{black-fg} [ YES ] {/}`
+      : `{${THEME.colors.dialogBg}-bg}{${THEME.colors.fg}-fg}   yes   {/}`;
+
+    const noStyle = this.selected === 1
+      ? `{${THEME.colors.error}-bg}{black-fg} [ NO ] {/}`
+      : `{${THEME.colors.dialogBg}-bg}{${THEME.colors.fg}-fg}   no   {/}`;
+
+    this.buttonsBox.setContent(`${yesStyle}     ${noStyle}`);
+  }
+
+  cleanup() {
+    this.keyHandlers.forEach(({ keys, handler }) => {
+      this.parent.unkey(keys, handler);
+    });
+    this.keyHandlers = [];
+  }
+
+  finish(resolve, result) {
+    this.cleanup();
+    this.hide();
+    resolve(result);
   }
 
   hide() {
@@ -154,4 +137,3 @@ export class ConfirmDialog {
     this.parent.render();
   }
 }
-

@@ -1,5 +1,23 @@
 #!/usr/bin/env node
 
+const originalError = console.error;
+console.error = (...args) => {
+  const msg = args[0]?.toString() || '';
+  if (msg.includes('Setulc') || msg.includes('terminfo') || msg.includes('tput')) {
+    return;
+  }
+  originalError.apply(console, args);
+};
+
+process.on('uncaughtException', (err) => {
+  const msg = err.message || '';
+  if (msg.includes('Setulc') || msg.includes('terminfo')) {
+    return;
+  }
+  originalError(err);
+  process.exit(1);
+});
+
 import blessed from 'blessed';
 import { FilePanel } from './ui/Panel.js';
 import { StatusBar } from './ui/StatusBar.js';

@@ -50,3 +50,4 @@ export function shortenPath(path, maxLen = 40) {
   return result;
 }
 
+
