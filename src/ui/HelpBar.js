@@ -25,9 +25,10 @@ export class HelpBar {
       { key: 'Space', action: 'Select' },
       { key: 'c', action: 'Copy' },
       { key: 'm', action: 'Move' },
-      { key: 'd', action: 'Delete' },
+      { key: 'd', action: 'Del' },
       { key: 't', action: 'Mode' },
-      { key: 'h', action: 'Hidden' },
+      { key: 'i', action: 'Diff' },
+      { key: 'u', action: 'SelDiff' },
       { key: 'g', action: 'GoTo' },
       { key: 'q', action: 'Quit' },
     ];

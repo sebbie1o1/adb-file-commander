@@ -49,6 +49,8 @@ npm start
 | `d` | Delete selected (with confirmation) |
 | `r` | Refresh current panel |
 | `h` | Toggle hidden files |
+| `i` | Toggle diff mode (compare panels) |
+| `u` | Select unique files (in diff mode) |
 | `.` | Go to parent directory |
 | `~` | Go to home directory |
 | `/` | Go to root / Android root |

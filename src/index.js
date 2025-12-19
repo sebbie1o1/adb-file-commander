@@ -148,10 +148,44 @@ class AdbCommander {
       }
     });
 
+    this.screen.key('i', () => this.toggleDiff());
+    this.screen.key('u', () => this.selectDiffUnique());
+
     this.screen.key('t', async () => {
       await this.getActivePanel().toggleMode();
       this.screen.render();
     });
+  }
+
+  toggleDiff() {
+    const left = this.leftPanel;
+    const right = this.rightPanel;
+
+    if (left.diffMode || right.diffMode) {
+      left.clearDiff();
+      right.clearDiff();
+      this.statusBar.setMessage('Diff mode off');
+    } else {
+      const leftFiles = left.getFileNames();
+      const rightFiles = right.getFileNames();
+      left.setDiffMode(true, rightFiles);
+      right.setDiffMode(true, leftFiles);
+      const leftUnique = left.diffFiles.size;
+      const rightUnique = right.diffFiles.size;
+      this.statusBar.setMessage(`Diff: Left has ${leftUnique} unique, Right has ${rightUnique} unique`);
+    }
+    this.screen.render();
+  }
+
+  selectDiffUnique() {
+    if (!this.leftPanel.diffMode) {
+      this.statusBar.setMessage('Enable diff mode first (press i)');
+      this.screen.render();
+      return;
+    }
+    this.getActivePanel().selectDiffUnique();
+    this.statusBar.setMessage('Selected unique files');
+    this.screen.render();
   }
 
   async copySelected() {

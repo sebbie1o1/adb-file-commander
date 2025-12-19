@@ -21,6 +21,8 @@ export class FilePanel extends EventEmitter {
     this.showHidden = false;
     this.isActive = false;
     this.adb = new AdbClient();
+    this.diffMode = false;
+    this.diffFiles = new Set();
 
     this.createBox(options.label);
     this.refresh();
@@ -224,6 +226,7 @@ export class FilePanel extends EventEmitter {
       const realIdx = this.scroll + idx;
       const isSelected = this.selected.has(file.fullPath);
       const isCursor = realIdx === this.cursor;
+      const isDiffUnique = this.diffMode && this.diffFiles.has(file.name);
 
       let icon = file.isDirectory ? THEME.icons.directory : THEME.icons.file;
       if (file.isParent) icon = THEME.icons.parent;
@@ -231,11 +234,17 @@ export class FilePanel extends EventEmitter {
 
       let nameColor = file.isDirectory ? THEME.colors.directory : THEME.colors.file;
       if (file.isSymlink) nameColor = THEME.colors.symlink;
+      if (isDiffUnique) nameColor = THEME.colors.diffUnique;
+
+      let diffMark = '';
+      if (this.diffMode && !file.isParent) {
+        diffMark = isDiffUnique ? `{${THEME.colors.diffUnique}-fg}!{/}` : `{${THEME.colors.diffCommon}-fg}={/}`;
+      }
 
       const selectMark = isSelected ? `{${THEME.colors.selected}-fg}${THEME.icons.selected}{/}` : THEME.icons.unselected;
 
       let name = file.name;
-      const maxNameLen = 26;
+      const maxNameLen = this.diffMode ? 24 : 26;
       if (name.length > maxNameLen) {
         name = name.slice(0, maxNameLen - 1) + '…';
       } else {
@@ -245,7 +254,7 @@ export class FilePanel extends EventEmitter {
       const size = file.isDirectory ? '<DIR>' : formatSize(file.size);
       const date = file.mtime ? formatDate(file.mtime) : '';
 
-      let line = `${selectMark} ${icon} {${nameColor}-fg}${name}{/} ${size.padStart(8)} ${date}`;
+      let line = `${selectMark}${diffMark} ${icon} {${nameColor}-fg}${name}{/} ${size.padStart(8)} ${date}`;
 
       if (isCursor && this.isActive) {
         line = `{${THEME.colors.cursorBg}-bg}${line}{/}`;
@@ -261,10 +270,14 @@ export class FilePanel extends EventEmitter {
       .map((path) => this.files.find((f) => f.fullPath === path)?.size || 0)
       .reduce((a, b) => a + b, 0);
 
-    this.infoBox.setContent(
-      `${this.files.length} items` +
-        (selectedCount > 0 ? ` | {${THEME.colors.selected}-fg}${selectedCount} selected (${formatSize(totalSize)}){/}` : '')
-    );
+    let infoText = `${this.files.length} items`;
+    if (this.diffMode) {
+      infoText += ` | {${THEME.colors.diffUnique}-fg}DIFF: ${this.diffFiles.size} unique{/}`;
+    }
+    if (selectedCount > 0) {
+      infoText += ` | {${THEME.colors.selected}-fg}${selectedCount} selected (${formatSize(totalSize)}){/}`;
+    }
+    this.infoBox.setContent(infoText);
   }
 
   moveUp() {
@@ -411,6 +424,37 @@ export class FilePanel extends EventEmitter {
       const file = this.files.find((f) => f.fullPath === path);
       return { path, isDirectory: file?.isDirectory || false };
     });
+  }
+
+  getFileNames() {
+    return new Set(this.files.filter((f) => !f.isParent).map((f) => f.name));
+  }
+
+  setDiffMode(enabled, otherPanelFiles = new Set()) {
+    this.diffMode = enabled;
+    if (enabled) {
+      const myFiles = this.getFileNames();
+      this.diffFiles = new Set([...myFiles].filter((name) => !otherPanelFiles.has(name)));
+    } else {
+      this.diffFiles.clear();
+    }
+    this.render();
+  }
+
+  clearDiff() {
+    this.diffMode = false;
+    this.diffFiles.clear();
+    this.render();
+  }
+
+  selectDiffUnique() {
+    if (!this.diffMode) return;
+    this.files.forEach((file) => {
+      if (!file.isParent && this.diffFiles.has(file.name)) {
+        this.selected.add(file.fullPath);
+      }
+    });
+    this.render();
   }
 }
 

@@ -25,6 +25,8 @@ export const THEME = {
     success: '#9ece6a',
     adb: '#bb9af7',
     local: '#7aa2f7',
+    diffUnique: '#f7768e',
+    diffCommon: '#565f89',
   },
 
   icons: {
